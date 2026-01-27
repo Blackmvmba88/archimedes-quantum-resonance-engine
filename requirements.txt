@@ -1,0 +1,30 @@
+# Core scientific computing
+numpy>=1.24.0
+scipy>=1.10.0
+matplotlib>=3.7.0
+
+# Data handling
+pandas>=2.0.0
+
+# Visualization
+plotly>=5.14.0
+seaborn>=0.12.0
+
+# Configuration management
+hydra-core>=1.3.0
+pyyaml>=6.0
+
+# Notebook support
+jupyter>=1.0.0
+ipywidgets>=8.0.0
+
+# Testing
+pytest>=7.3.0
+pytest-cov>=4.1.0
+
+# Numerical integration (high precision)
+numba>=0.57.0
+
+# 3D visualization (Bloch sphere)
+matplotlib>=3.7.0
+mpl_toolkits>=3.7.0
