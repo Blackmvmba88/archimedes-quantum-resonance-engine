@@ -1,0 +1,60 @@
+name: 🧪 Validate Experiments
+
+on:
+  push:
+    branches: [ main, develop, copilot/** ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run experiments weekly to ensure they remain functional (sustained rhythm)
+    - cron: '0 10 * * 1'  # Every Monday at 10:00 UTC
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  run-experiments:
+    name: Run Scientific Experiments
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+    
+    - name: 📦 Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: 🔬 Run Flagship Experiment
+      run: |
+        echo "Running pyridine UV calibration experiment..."
+        python experiments/pyridine_uv_calibration.py
+        
+    - name: ✅ Verify experiment outputs
+      run: |
+        if [ -f experiments/pyridine_spectrum.png ]; then
+          echo "✅ Experiment output generated successfully"
+          ls -lh experiments/pyridine_spectrum.png
+        else
+          echo "❌ Experiment output not found"
+          exit 1
+        fi
+    
+    - name: 📊 Upload experiment results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: experiment-results
+        path: experiments/*.png
+        retention-days: 30
+        
+    - name: 💬 Report status
+      if: always()
+      run: |
+        echo "🎯 Experiment validation complete"
+        echo "Status: ${{ job.status }}"
