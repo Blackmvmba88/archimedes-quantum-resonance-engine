@@ -24,7 +24,3 @@ pytest-cov>=4.1.0
 
 # Numerical integration (high precision)
 numba>=0.57.0
-
-# 3D visualization (Bloch sphere)
-matplotlib>=3.7.0
-mpl_toolkits>=3.7.0
