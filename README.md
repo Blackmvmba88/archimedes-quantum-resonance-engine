@@ -51,30 +51,66 @@ Archimedes Quantum Resonance Engine:
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Quick Start - Runs in 30 Seconds!
+
+**Experience the engine in action:**
 
 ```bash
-# Clonar repositorio
+# Clone repository
 git clone https://github.com/Blackmvmba88/archimedes-quantum-resonance-engine.git
 cd archimedes-quantum-resonance-engine
 
-# Instalar dependencias
+# Install dependencies
 pip install -r requirements.txt
 
-# Ejecutar experimento de calibración
+# Run flagship experiment
 python experiments/pyridine_uv_calibration.py
 ```
+
+**What you'll see:**
+- ✅ Simulated UV absorption spectrum of pyridine @ 260 nm
+- ✅ Lorentz resonator model in action
+- ✅ Quality factor Q = 5.2, resonance frequency = 1.15 PHz
+- ✅ Visual spectrum plot saved as PNG
+- ✅ Complete in < 5 seconds
+
+This demonstrates the core simulation capability: **predicting electromagnetic resonances in matter**.
+
+---
+
+## 🎯 Why Start with the Lorentz Model?
+
+**Architectural Decision:** We deliberately start with the classical Lorentz oscillator model (not full quantum mechanics) because:
+
+1. **Proven Physics**: Accurately describes UV/visible absorption in most organic molecules
+2. **Fast Computation**: Runs in milliseconds, enabling rapid iteration
+3. **Clear Validation**: Can be compared directly with experimental spectroscopy data
+4. **Solid Foundation**: Natural stepping stone to quantum Two-Level Systems (TLS)
+5. **Teachable**: Easy to understand, visualize, and explain
+
+*"Make it work, make it right, make it fast"* - We start simple and evolve toward quantum control.
 
 ---
 
 ## 📊 Roadmap Científico
 
+### ✅ Phase 1: Foundation (Current - v1.0)
 - [x] Sistema de unidades SI completo
 - [x] Modelo de resonancia Lorentziano
-- [ ] Calibración UV con piridina (RMS < 5%)
+- [x] **Experimento bandera ejecutable (pyridine @ 260nm)**
+- [x] Visualización de espectros
+- [ ] Calibración RMS < 5% con datos experimentales
+
+### 🔄 Phase 2: Multi-Resonance Systems (v1.1)
+- [ ] Múltiples picos de absorción
 - [ ] Mapeo de resonancias en polímeros
-- [ ] Transición a modelo TLS
+- [ ] Comparación con espectroscopía experimental
+- [ ] Optimización de parámetros (fitting)
+
+### 🔮 Phase 3: Quantum Evolution (v2.0)
+- [ ] Transición a modelo TLS (Two-Level System)
 - [ ] Control cuántico de poblaciones
+- [ ] Coherencia y decoherencia
 - [ ] Generación de blueprints para hardware
 
 ---
