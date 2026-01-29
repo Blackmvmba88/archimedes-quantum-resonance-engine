@@ -43,7 +43,15 @@ class LorentzResonator:
         Returns
         -------
         chi : complex array
-            Complex susceptibility
+            Complex susceptibility (normalized, arbitrary units)
+            
+        Notes
+        -----
+        This returns a normalized susceptibility proportional to the
+        full form: χ = (N*e²)/(m*ε₀) * 1/(ω₀² - ω² - iγω)
+        where N is number density and ε₀ is vacuum permittivity.
+        The prefactor is omitted for simplicity since we normalize
+        absorption spectra to peak = 1.
         """
         omega = np.asarray(omega)
         denominator = self.omega_0**2 - omega**2 - 1j * self.gamma * omega
@@ -90,12 +98,17 @@ class LorentzResonator:
     
     def fwhm(self):
         """
-        Full width at half maximum (FWHM) of the resonance.
+        Full width at half maximum (FWHM) of the resonance in Hz.
         
         Returns
         -------
         fwhm_hz : float
             FWHM in Hz
+            
+        Notes
+        -----
+        For a Lorentzian lineshape with damping gamma (in rad/s),
+        the FWHM in regular frequency is gamma / (2π).
         """
         return self.gamma / (2 * np.pi)
     
@@ -134,8 +147,12 @@ def fit_lorentz_to_peak(peak_wavelength_nm, width_nm, oscillator_strength=1.0):
     omega_0 = 2 * np.pi * peak_freq
     
     # Estimate damping from width
-    # For Lorentzian: FWHM ≈ gamma / (2π)
+    # For Lorentzian lineshape: FWHM ≈ gamma / (2π) in Hz
     # Width in wavelength needs conversion to frequency width
+    # Derivation: f = c/λ → df = -c/λ² dλ → |df| = c/λ² |dλ|
+    # Converting nm to m: width_nm * 1e-9 = width_m
+    # freq_width = c * (width_nm * 1e-9) / (peak_wavelength_nm * 1e-9)²
+    # Simplifies to: c * width_nm * 1e9 / peak_wavelength_nm²
     freq_width = const.SPEED_OF_LIGHT * width_nm / (peak_wavelength_nm**2) * 1e9
     gamma = 2 * np.pi * freq_width
     
@@ -156,7 +173,13 @@ def multi_resonator_absorption(wavelengths_nm, resonators):
     Returns
     -------
     total_absorption : array
-        Combined normalized absorption spectrum
+        Combined normalized absorption spectrum (peak = 1)
+        
+    Notes
+    -----
+    The total spectrum is normalized to peak = 1 for visualization purposes.
+    If you need to preserve relative oscillator strengths, access individual
+    resonator spectra separately and combine without normalization.
     """
     wavelengths_nm = np.asarray(wavelengths_nm)
     total = np.zeros_like(wavelengths_nm, dtype=float)

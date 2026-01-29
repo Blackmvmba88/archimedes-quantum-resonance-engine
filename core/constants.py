@@ -29,7 +29,27 @@ CM_INV_TO_HZ = SPEED_OF_LIGHT * 100  # 1 cm^-1 in Hz
 
 # Spectroscopy Units
 def wavelength_to_frequency(wavelength_nm):
-    """Convert wavelength (nm) to frequency (Hz)."""
+    """
+    Convert wavelength (nm) to frequency (Hz).
+    
+    Parameters
+    ----------
+    wavelength_nm : float or array_like
+        Wavelength in nanometers (must be positive)
+        
+    Returns
+    -------
+    frequency_hz : float or array
+        Frequency in Hz
+        
+    Notes
+    -----
+    Uses: f = c / λ where c is speed of light
+    Valid for wavelengths > 0 nm
+    """
+    wavelength_nm = np.asarray(wavelength_nm)
+    if np.any(wavelength_nm <= 0):
+        raise ValueError("Wavelength must be positive")
     return SPEED_OF_LIGHT / (wavelength_nm * NM_TO_METER)
 
 def frequency_to_energy(frequency_hz):
