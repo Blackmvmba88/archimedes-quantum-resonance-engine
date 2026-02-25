@@ -1,16 +1,65 @@
-# React + Vite
+# AeroAcoustic Resonance Engine
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Sistema de simulación científica que integra aerodinámica, acústica y resonancia cuántica para análisis de distorsión y generación de diseños adaptativos.**
 
-Currently, two official plugins are available:
+Desarrollado para **Iyari Cancino Gómez** — Científico Cuántico Operativo, Córdoba, Veracruz, México.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Módulos
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Acoustic Analysis
+- FFT Spectrum Analyzer (Cooley-Tukey radix-2)
+- Resonance Detection (Helmholtz equation)
+- THD Calculator (hasta 10° armónico)
+- SPL Mapping (dB ref. 20 μPa)
+- Modal Analysis (campos de presión acústica)
 
-## Expanding the ESLint configuration
+### 2. Aerodynamic Simulation
+- Velocity Field (flujo potencial 2D)
+- Pressure Distribution (Bernoulli)
+- Reynolds Calculator
+- Surface Cp (invíscido y viscoso)
+- Boundary Layer (Blasius)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 3. Aero-Acoustic Coupling
+- Lighthill's Analogy (U⁸ power law)
+- Curle's Extension (dipole intensity)
+- Strouhal Frequency (vortex shedding)
+- Radiation Field
+
+### 4. Adaptive Design Generator
+- Evolutionary Optimizer
+- Sabine Reverberation (T60)
+- 5 Material Properties
+- Visual Comparison
+
+### 5. Quantum Resonance
+- Quantum Tunneling (rectangular barrier)
+- Quantum Well (Schrödinger energy levels)
+- Phonon Dispersion (monatomic + diatomic)
+- Quantum Coherence (g¹ and g²)
+
+### 6. Real-Time Dashboard
+- Live Monitoring (500ms updates)
+- Parameter Control
+- Data Export (CSV/JSON)
+- Timeline Charts
+
+## Instalación
+
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+npx serve dist
+```
+
+---
+
+*Archimedes Quantum Resonance Engine — Quantum Operations Lab*
