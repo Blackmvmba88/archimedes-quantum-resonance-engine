@@ -1,28 +1,139 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase1Classical.jsx — Optimizado con useMemo
+//
+// PROBLEMA (antes):
+//   Los arrays `data` y los objetos `layout` se creaban como literales inline
+//   directamente en el JSX:
+//
+//     <PlotlyChart
+//       data={[{ x: omega_THz, y: absNorm, ... }]}   ← nuevo array en cada render
+//       layout={{ xaxis: { title: '...' }, ... }}     ← nuevo objeto en cada render
+//     />
+//
+//   Consecuencia: aunque `omega_THz` y `absNorm` no hayan cambiado, React ve
+//   una nueva referencia de array/objeto y fuerza a PlotlyChart a re-renderizarse.
+//   React.memo en PlotlyChart es inútil si el padre le pasa props inestables.
+//
+// SOLUCIÓN (después):
+//   Todos los objetos y arrays que se pasan como props a PlotlyChart se
+//   calculan con `useMemo`. Esto garantiza que la referencia del objeto
+//   solo cambie cuando sus dependencias reales cambien.
+//
+//   La regla es: si un valor se pasa como prop a un componente memoizado,
+//   ese valor DEBE estar envuelto en useMemo (si es objeto/array) o
+//   useCallback (si es función).
+// ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useMemo } from 'react';
 import PlotlyChart from '../../components/PlotlyChart';
 import {
-  lorentzSpectrum, qualityFactor, resonanceWavelength, pyridinePreset
+  lorentzSpectrum, qualityFactor, resonanceWavelength, pyridinePreset,
 } from '../../core/phase1_classical/lorentz.js';
 import { CONSTANTS } from '../../core/shared/constants.js';
 
+// pyridinePreset() retorna siempre los mismos valores; se llama una sola vez
+// fuera del componente para que no se recree en cada render.
+const PYRIDINE = pyridinePreset();
+
 export default function Phase1Classical() {
-  const preset = pyridinePreset();
-  const [omega0_THz, setOmega0_THz] = useState((preset.omega0 / 1e12).toFixed(2));
-  const [Q, setQ] = useState(preset.Q);
+  const [omega0_THz, setOmega0_THz] = useState((PYRIDINE.omega0 / 1e12).toFixed(2));
+  const [Q, setQ]                   = useState(PYRIDINE.Q);
   const [usePyridine, setUsePyridine] = useState(true);
 
-  const omega0 = usePyridine ? preset.omega0 : parseFloat(omega0_THz) * 1e12;
-  const gamma  = omega0 / Q;
+  // Parámetros físicos derivados del estado.
+  // useMemo evita recalcular omega0 y gamma si los estados no cambiaron.
+  const { omega0, gamma } = useMemo(() => {
+    const w0 = usePyridine ? PYRIDINE.omega0 : parseFloat(omega0_THz) * 1e12;
+    return { omega0: w0, gamma: w0 / Q };
+  }, [usePyridine, omega0_THz, Q]);
 
-  const spectrum = useMemo(() => lorentzSpectrum(omega0, gamma, 500, 15), [omega0, gamma]);
+  // ─── Cálculo físico principal ─────────────────────────────────────────────
+  // lorentzSpectrum() es la función más costosa: itera 500 puntos y calcula
+  // la susceptibilidad compleja en cada uno. Con useMemo, solo se recalcula
+  // cuando omega0 o gamma cambian (es decir, cuando el usuario mueve un slider).
+  const spectrum = useMemo(
+    () => lorentzSpectrum(omega0, gamma, 500, 15),
+    [omega0, gamma],
+  );
 
-  const lambda0_nm = resonanceWavelength(omega0).toFixed(1);
-  const fwhm_nm    = (resonanceWavelength(omega0 - gamma / 2) - resonanceWavelength(omega0 + gamma / 2)).toFixed(2);
+  // ─── Datos derivados del espectro ─────────────────────────────────────────
+  // Normalización y conversión de unidades. Dependen de `spectrum`, que ya
+  // está memoizado. Estos valores solo cambian cuando `spectrum` cambia.
+  const { absNorm, omega_THz, maxAbs } = useMemo(() => {
+    const max = Math.max(...spectrum.absorption);
+    return {
+      maxAbs:    max,
+      absNorm:   spectrum.absorption.map(v => v / max),
+      omega_THz: spectrum.omega.map(w => w / 1e12),
+    };
+  }, [spectrum]);
 
-  // Normalize for display
-  const maxAbs = Math.max(...spectrum.absorption);
-  const absNorm = spectrum.absorption.map(v => v / maxAbs);
-  const omega_THz = spectrum.omega.map(w => w / 1e12);
+  // Métricas derivadas (solo dependen de omega0 y gamma, no del espectro completo).
+  const lambda0_nm = useMemo(() => resonanceWavelength(omega0).toFixed(1), [omega0]);
+  const fwhm_nm    = useMemo(
+    () => (resonanceWavelength(omega0 - gamma / 2) - resonanceWavelength(omega0 + gamma / 2)).toFixed(2),
+    [omega0, gamma],
+  );
+
+  // ─── Props memoizadas para PlotlyChart ────────────────────────────────────
+  // ANTES: data={[{ x: omega_THz, y: absNorm, ... }]}
+  //   → Crea un nuevo array [] en cada render, aunque omega_THz y absNorm
+  //     no hayan cambiado. React.memo no puede detectar la igualdad.
+  //
+  // DESPUÉS: const absorptionData = useMemo(() => [...], [omega_THz, absNorm, omega0])
+  //   → La referencia del array solo cambia cuando sus dependencias cambian.
+  //     React.memo en PlotlyChart puede ahora hacer su trabajo correctamente.
+
+  const absorptionData = useMemo(() => [
+    {
+      x: omega_THz,
+      y: absNorm,
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: '#00e676', width: 2 },
+      fill: 'tozeroy',
+      fillcolor: 'rgba(0,230,118,0.08)',
+      name: 'Im[χ(ω)] (norm.)',
+    },
+    {
+      x: [omega0 / 1e12, omega0 / 1e12],
+      y: [0, 1],
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: '#ff1744', width: 1, dash: 'dash' },
+      name: `ω₀ = ${(omega0 / 1e12).toFixed(2)} THz`,
+    },
+  ], [omega_THz, absNorm, omega0]);
+
+  const dispersionData = useMemo(() => [
+    {
+      x: omega_THz,
+      y: spectrum.chi_re.map(v => v / maxAbs),
+      type: 'scatter',
+      mode: 'lines',
+      line: { color: '#00e5ff', width: 2 },
+      name: 'Re[χ(ω)]',
+    },
+  ], [omega_THz, spectrum.chi_re, maxAbs]);
+
+  // Los layouts son estáticos (no dependen del estado), por lo que se
+  // memoizan con dependencias vacías []. Se crean una sola vez en toda
+  // la vida del componente.
+  const absorptionLayout = useMemo(() => ({
+    xaxis: { title: 'Frequency ω (THz)' },
+    yaxis: { title: 'Absorption (normalized)', range: [0, 1.1] },
+    height: 300,
+    legend: { font: { size: 9, color: '#8888aa' } },
+  }), []);
+
+  const dispersionLayout = useMemo(() => ({
+    xaxis: { title: 'ω (THz)' },
+    yaxis: { title: 'Dispersion (norm.)' },
+    height: 240,
+  }), []);
+
+  // Estilos estáticos también memoizados para evitar nuevas referencias.
+  const chartStyle300 = useMemo(() => ({ height: '300px' }), []);
+  const chartStyle240 = useMemo(() => ({ height: '240px' }), []);
 
   return (
     <>
@@ -34,7 +145,6 @@ export default function Phase1Classical() {
       </div>
       <div className="module-body">
 
-        {/* Status banner */}
         <div className="panel" style={{ borderLeft: '3px solid #00e676', marginBottom: 16 }}>
           <p style={{ margin: 0, fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.7 }}>
             <strong style={{ color: '#00e676' }}>Lorentz Oscillator Model</strong> — The electron is modelled as a
@@ -44,7 +154,6 @@ export default function Phase1Classical() {
           </p>
         </div>
 
-        {/* Metrics */}
         <div className="grid-3" style={{ marginBottom: 16 }}>
           <div className="panel">
             <div className="metric">
@@ -67,55 +176,23 @@ export default function Phase1Classical() {
         </div>
 
         <div className="grid-2">
-          {/* Absorption spectrum */}
+          {/* Absorption spectrum — recibe props memoizadas */}
           <div className="panel panel-glow" style={{ gridColumn: '1 / -1' }}>
             <div className="panel-header">Lorentz Absorption Spectrum — Im[χ(ω)]</div>
             <PlotlyChart
-              data={[
-                {
-                  x: omega_THz,
-                  y: absNorm,
-                  type: 'scatter', mode: 'lines',
-                  line: { color: '#00e676', width: 2 },
-                  fill: 'tozeroy',
-                  fillcolor: 'rgba(0,230,118,0.08)',
-                  name: 'Im[χ(ω)] (norm.)',
-                },
-                {
-                  x: [omega0 / 1e12, omega0 / 1e12],
-                  y: [0, 1],
-                  type: 'scatter', mode: 'lines',
-                  line: { color: '#ff1744', width: 1, dash: 'dash' },
-                  name: `ω₀ = ${(omega0 / 1e12).toFixed(2)} THz`,
-                },
-              ]}
-              layout={{
-                xaxis: { title: 'Frequency ω (THz)' },
-                yaxis: { title: 'Absorption (normalized)', range: [0, 1.1] },
-                height: 300,
-                legend: { font: { size: 9, color: '#8888aa' } },
-              }}
-              style={{ height: '300px' }}
+              data={absorptionData}
+              layout={absorptionLayout}
+              style={chartStyle300}
             />
           </div>
 
-          {/* Dispersion (Re[χ]) */}
+          {/* Dispersion — recibe props memoizadas */}
           <div className="panel">
             <div className="panel-header">Dispersion — Re[χ(ω)]</div>
             <PlotlyChart
-              data={[{
-                x: omega_THz,
-                y: spectrum.chi_re.map(v => v / maxAbs),
-                type: 'scatter', mode: 'lines',
-                line: { color: '#00e5ff', width: 2 },
-                name: 'Re[χ(ω)]',
-              }]}
-              layout={{
-                xaxis: { title: 'ω (THz)' },
-                yaxis: { title: 'Dispersion (norm.)' },
-                height: 240,
-              }}
-              style={{ height: '240px' }}
+              data={dispersionData}
+              layout={dispersionLayout}
+              style={chartStyle240}
             />
           </div>
 
