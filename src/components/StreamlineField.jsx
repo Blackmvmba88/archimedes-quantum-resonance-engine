@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import PlotlyChart from './PlotlyChart';
 
 function clamp(value, min, max) {
