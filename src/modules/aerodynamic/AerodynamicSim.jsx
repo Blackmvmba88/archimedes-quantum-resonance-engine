@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import PlotlyChart from '../../components/PlotlyChart';
+import StreamlineField from '../../components/StreamlineField';
 import {
   reynoldsNumber, flowRegime, cylinderFlow,
   turbulenceIntensity, boundaryLayerThickness, CONSTANTS
@@ -34,30 +35,12 @@ export default function AerodynamicSim() {
           <div>
             {/* Velocity field */}
             <div className="panel panel-glow">
-              <div className="panel-header">Velocity Field — Potential Flow Around Cylinder</div>
-              <PlotlyChart
-                data={[{
-                  z: flow.speed,
-                  x: flow.y,
-                  y: flow.x,
-                  type: 'heatmap',
-                  colorscale: [
-                    [0, '#0a0a0f'], [0.15, '#1a1a4e'],
-                    [0.3, '#7c4dff'], [0.5, '#00e5ff'],
-                    [0.7, '#00e676'], [0.85, '#ffab00'], [1, '#ff1744']
-                  ],
-                  showscale: true,
-                  colorbar: {
-                    title: { text: 'm/s', font: { size: 10, color: '#8888aa' } },
-                    tickfont: { size: 9, color: '#8888aa' },
-                  },
-                }]}
-                layout={{
-                  xaxis: { title: 'Y (m)', scaleanchor: 'y' },
-                  yaxis: { title: 'X (m)' },
-                  height: 320,
-                }}
-                style={{ height: '320px' }}
+              <div className="panel-header">Velocity Field — Streamlines + Magnitude</div>
+              <StreamlineField
+                field={flow}
+                obstacleRadius={diameter / 2}
+                seedCount={19}
+                height={360}
               />
             </div>
 
